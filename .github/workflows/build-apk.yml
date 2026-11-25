@@ -1,0 +1,49 @@
+name: Gerar APK
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Preparar projeto Android
+        run: |
+          mkdir www && cp index.html www/
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/local-notifications@6
+          npx cap init Despertador com.despertador.app --web-dir www
+          npx cap add android
+          npx cap sync android
+      - name: Som e permissões do alarme
+        run: |
+          mkdir -p android/app/src/main/res/raw
+          python3 - << 'PY'
+          import wave, struct, math
+          sr = 22050
+          buf = bytearray()
+          def tom(f, d):
+              n = int(sr * d)
+              for i in range(n):
+                  e = min(1, i / (sr * .01), (n - i) / (sr * .02))
+                  buf.extend(struct.pack('<h', int(20000 * e * math.sin(2 * math.pi * f * i / sr))))
+          def pausa(d):
+              buf.extend(b'\x00\x00' * int(sr * d))
+          for _ in range(25):
+              tom(988, .16); pausa(.08); tom(988, .16); pausa(.08); tom(1319, .3); pausa(.4)
+          w = wave.open('android/app/src/main/res/raw/alarme.wav', 'wb')
+          w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+          w.writeframes(bytes(buf)); w.close()
+          PY
+          sed -i 's|<application|<uses-permission android:name="android.permission.USE_EXACT_ALARM" /><uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" /><uses-permission android:name="android.permission.POST_NOTIFICATIONS" /><uses-permission android:name="android.permission.VIBRATE" /><uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /><application|' android/app/src/main/AndroidManifest.xml
+      - name: Compilar
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: despertador-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
