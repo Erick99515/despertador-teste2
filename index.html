@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Despertador">
+<meta name="theme-color" content="#0b1020">
+<title>Despertador</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600&display=swap">
+<style>
+:root,:root[data-tema="nevoa"]{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:linear-gradient(165deg,#f1f4f8,#d9e2ec);--ink:#1b2430;--muted:#66758a;--card:rgba(255,255,255,.6);
+  --line:rgba(27,36,48,.12);--accent:#3d5a80;--on:#fff;--sheet:#fbfcfe;--chip:rgba(27,36,48,.07);--danger:#c0392b;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]):not([data-tema]){
+    --bg:linear-gradient(165deg,#161d3a,#080b18);--ink:#eceff9;--muted:#8d99bb;--card:rgba(255,255,255,.06);
+    --line:rgba(255,255,255,.1);--accent:#ffc247;--on:#1a1200;--sheet:#161c33;--chip:rgba(255,255,255,.08);--danger:#ff8086;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]:not([data-tema]),:root[data-tema="noite"]{
+  --bg:linear-gradient(165deg,#161d3a,#080b18);--ink:#eceff9;--muted:#8d99bb;--card:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.1);--accent:#ffc247;--on:#1a1200;--sheet:#161c33;--chip:rgba(255,255,255,.08);--danger:#ff8086;
+  color-scheme:dark;
+}
+:root[data-tema="aurora"]{
+  --bg:linear-gradient(165deg,#fde6df,#e3dbf6 55%,#d6e6fa);--ink:#2b2142;--muted:#756a92;--card:rgba(255,255,255,.55);
+  --line:rgba(43,33,66,.12);--accent:#7352d1;--on:#fff;--sheet:#fdf9fb;--chip:rgba(43,33,66,.07);--danger:#c0392b;
+  color-scheme:light;
+}
+:root[data-tema="floresta"]{
+  --bg:linear-gradient(165deg,#1b3329,#0a1511);--ink:#e8f1ec;--muted:#8fa99b;--card:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.1);--accent:#93d6ad;--on:#0a1511;--sheet:#14261e;--chip:rgba(255,255,255,.08);--danger:#ff8c8c;
+  color-scheme:dark;
+}
+:root[data-tema="grafite"]{
+  --bg:linear-gradient(165deg,#26262a,#0e0e10);--ink:#f3f3f4;--muted:#9b9ba2;--card:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.1);--accent:#f3f3f4;--on:#121214;--sheet:#1c1c1f;--chip:rgba(255,255,255,.08);--danger:#ff8c8c;
+  color-scheme:dark;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100%;background:var(--bg);background-attachment:fixed;color:var(--ink);
+  font-family:"Outfit","SF Pro Rounded",ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
+}
+main{max-width:520px;margin:0 auto;padding:8px 22px 130px}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.top{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
+#date{font-size:16px;color:var(--muted);text-transform:capitalize}
+.icon{width:44px;height:44px;border-radius:50%;border:0;background:var(--chip);display:grid;place-items:center;padding:0}
+.hero{text-align:center;padding:34px 0 30px}
+#clock{font-size:clamp(84px,30vw,140px);font-weight:200;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.bar{width:120px;height:2px;border-radius:2px;background:var(--line);margin:20px auto 16px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent)}
+#next{color:var(--muted);font-size:15px}
+
+#list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.alarm{display:flex;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:26px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.alarm .body{flex:1;min-width:0;text-align:left;background:none;border:0;padding:18px 0 18px 22px}
+.alarm.off .body{opacity:.4}
+.time{display:block;font-size:46px;font-weight:200;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.nome{display:block;font-size:15px;margin-top:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dias{display:block;font-size:14px;color:var(--muted);margin-top:4px;line-height:1.35}
+.empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:16px}
+.switch{flex:0 0 auto;width:54px;height:32px;margin:0 22px 0 12px;border-radius:999px;border:0;background:var(--chip);position:relative;padding:0;transition:background .15s}
+.switch::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"]::after{transform:translateX(22px);background:var(--on)}
+
+.fab{
+  position:fixed;right:max(22px,calc((100% - 520px)/2 + 22px));bottom:calc(24px + env(safe-area-inset-bottom,0px));
+  width:64px;height:64px;border-radius:50%;border:0;background:var(--accent);color:var(--on);
+  display:grid;place-items:center;padding:0;box-shadow:0 10px 30px rgba(0,0,0,.28);z-index:10
+}
+.fab:active{transform:scale(.95)}
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+#scrim.show{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;margin:0 auto;max-width:520px;max-height:92vh;max-height:92dvh;overflow-y:auto;
+  background:var(--sheet);border-radius:28px 28px 0 0;padding:10px 22px calc(22px + env(safe-area-inset-bottom,0px));
+  z-index:30;transform:translateY(100%);visibility:hidden;transition:transform .28s ease,visibility 0s .28s;box-shadow:0 -10px 40px rgba(0,0,0,.25)
+}
+.sheet.open{transform:none;visibility:visible;transition:transform .28s ease}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+.sheet h2{font-size:18px;font-weight:600;margin:0 0 14px}
+input[type=time],input[type=text]{
+  display:block;width:100%;background:var(--chip);border:0;border-radius:20px;padding:12px 16px;min-width:0;
+  -webkit-appearance:none;appearance:none
+}
+input[type=time]{text-align:center;font-size:60px;font-weight:200;font-variant-numeric:tabular-nums;line-height:1.15}
+input[type=text]{font-size:17px;margin-top:10px}
+.sub{font-size:15px;color:var(--muted);margin:20px 0 10px}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{aspect-ratio:1;border-radius:50%;border:1.5px solid var(--line);background:transparent;font-size:15px;font-weight:400;color:var(--muted);padding:0;font-variant-numeric:tabular-nums}
+.day[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on);font-weight:600}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
+.presets button{background:var(--chip);border:0;border-radius:999px;padding:8px 14px;font-size:14px}
+.hint{font-size:13px;color:var(--muted);margin:0 0 18px;line-height:1.45}
+.acts{display:flex;gap:12px;align-items:center}
+.primary{flex:1;background:var(--accent);color:var(--on);border:0;border-radius:18px;padding:16px;font-size:18px;font-weight:600}
+.ghost{background:none;border:0;color:var(--danger);font-size:16px;padding:12px 8px}
+.sws{display:flex;justify-content:space-between;gap:8px;margin:4px 0 22px}
+.sw{background:none;border:0;display:grid;justify-items:center;gap:8px;font-size:13px;color:var(--muted);padding:0}
+.sw i{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);display:block}
+.sw[aria-pressed="true"]{color:var(--ink)}
+.sw[aria-pressed="true"] i{outline:2px solid var(--accent);outline-offset:3px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid var(--line);font-size:16px}
+.set .switch{margin:0}
+.set small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.set .lnk{background:none;border:0;color:var(--accent);font-size:16px;padding:0}
+
+#ring{
+  position:fixed;inset:0;z-index:50;background:var(--accent);color:var(--on);display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;text-align:center;
+  padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px))
+}
+#ring.show{display:flex}
+#ring .big{font-size:clamp(84px,30vw,150px);font-weight:200;font-variant-numeric:tabular-nums;line-height:1;animation:pulse 1.2s ease-in-out infinite}
+#ring .lbl{font-size:22px;margin-bottom:30px}
+#ring .btns{display:flex;flex-direction:column;gap:12px;width:100%;max-width:340px}
+#ring button{border-radius:20px;padding:18px;font-size:19px;font-weight:600;border:2px solid var(--on);background:transparent;color:var(--on)}
+#ring button.stop{background:var(--on);color:var(--accent)}
+@keyframes pulse{50%{transform:scale(1.05)}}
+@media (prefers-reduced-motion:reduce){#ring .big{animation:none}.sheet,#scrim,.switch,.switch::after{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <span id="date"></span>
+    <button class="icon" id="cfg" type="button" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/></svg>
+    </button>
+  </header>
+  <section class="hero">
+    <div id="clock">--:--</div>
+    <div class="bar"><i id="sec"></i></div>
+    <div id="next">Nenhum alarme ligado</div>
+  </section>
+  <ul id="list"></ul>
+</main>
+
+<button class="fab" id="fab" type="button" aria-label="Novo alarme">
+  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+</button>
+
+<div id="scrim"></div>
+
+<div class="sheet" id="sa" role="dialog" aria-label="Alarme">
+  <div class="grab"></div>
+  <h2 id="hA">Novo alarme</h2>
+  <input type="time" id="t" value="07:00" aria-label="Horário do alarme">
+  <input type="text" id="lbl" maxlength="40" placeholder="Nome (opcional)" aria-label="Nome do alarme">
+  <div class="sub">Dias do mês</div>
+  <div class="days" id="days" role="group" aria-label="Dias do mês"></div>
+  <div class="presets">
+    <button type="button" data-p="all">Todos</button>
+    <button type="button" data-p="odd">Ímpares</button>
+    <button type="button" data-p="even">Pares</button>
+    <button type="button" data-p="none">Limpar</button>
+  </div>
+  <p class="hint">Sem nenhum dia marcado, o alarme toca só uma vez. Dias que não existem no mês (como 31 em abril) são pulados.</p>
+  <div class="acts">
+    <button class="ghost" id="del" type="button">Excluir</button>
+    <button class="primary" id="save" type="button">Salvar</button>
+  </div>
+</div>
+
+<div class="sheet" id="sc" role="dialog" aria-label="Ajustes">
+  <div class="grab"></div>
+  <h2>Tema</h2>
+  <div class="sws" id="sws"></div>
+  <div class="set">
+    <div>Manter a tela ligada<small id="wlMsg">Ajuda o alarme a tocar com a página aberta.</small></div>
+    <button class="switch" id="wl" type="button" role="switch" aria-checked="false" aria-label="Manter a tela ligada"></button>
+  </div>
+  <div class="set"><span>Volume do alarme</span><button class="lnk" id="test" type="button">Testar som</button></div>
+  <div class="set" id="natRow" style="display:none"><div>Alarmes nativos<small>Agendados no Android: tocam com o app fechado.</small></div></div>
+  <div class="set" id="ntRow" style="display:none"><div>Notificações desativadas<small>Ative para o alarme aparecer e tocar.</small></div><button class="lnk" id="ntBtn" type="button">Permitir</button></div>
+  <div class="set" id="exRow" style="display:none"><div>Alarmes exatos<small>Necessário para tocar na hora certa.</small></div><button class="lnk" id="exBtn" type="button">Permitir</button></div>
+</div>
+
+<div id="ring" role="alertdialog" aria-label="Alarme tocando">
+  <div class="big" id="ringTime">00:00</div>
+  <div class="lbl" id="ringLbl">Hora de acordar</div>
+  <div class="btns">
+    <button type="button" class="stop" id="stop">Parar</button>
+    <button type="button" id="snooze">Soneca de 5 minutos</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY='despertador:v2',TKEY='despertador:tema',WKEY='despertador:tela';
+  var TEMAS=[
+    ['nevoa','Névoa','linear-gradient(160deg,#f1f4f8,#c9d5e3)'],
+    ['aurora','Aurora','linear-gradient(160deg,#fde6df,#d3c9f3)'],
+    ['floresta','Floresta','linear-gradient(160deg,#25443a,#0a1511)'],
+    ['noite','Noite','linear-gradient(160deg,#27316a,#080b18)'],
+    ['grafite','Grafite','linear-gradient(160deg,#3a3a40,#0e0e10)']
+  ];
+  var alarms=load(),sel=[],editingId=null,ringing=false,snoozeAt=0,snoozeLbl='',beepTimer=null,ctx=null,lock=null,lastStamp='';
+  var cap=window.Capacitor,LN=null,native=false,fila=Promise.resolve();
+  var CH='alarme-v1',SN=99999,MAXN=60;
+  try{if(cap&&cap.isNativePlatform&&cap.isNativePlatform()&&cap.Plugins&&cap.Plugins.LocalNotifications){LN=cap.Plugins.LocalNotifications;native=true}}catch(e){}
+
+  function $(id){return document.getElementById(id)}
+  function pad(n){return (n<10?'0':'')+n}
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function read(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function load(){try{var r=read(KEY),a=r?JSON.parse(r):[];return Array.isArray(a)?a:[]}catch(e){return []}}
+  function save(){store(KEY,JSON.stringify(alarms));agendar()}
+
+  /* ---------- tema ---------- */
+  function renderTemas(cur){
+    $('sws').innerHTML=TEMAS.map(function(t){
+      return '<button type="button" class="sw" data-t="'+t[0]+'" aria-pressed="'+(t[0]===cur)+'"><i style="background:'+t[2]+'"></i>'+t[1]+'</button>';
+    }).join('');
+  }
+  var savedTema=read(TKEY),temaOk=TEMAS.some(function(t){return t[0]===savedTema});
+  renderTemas(temaOk?savedTema:'');
+  if(temaOk)document.documentElement.setAttribute('data-tema',savedTema);
+  $('sws').addEventListener('click',function(e){
+    var b=e.target.closest('.sw');if(!b)return;
+    document.documentElement.setAttribute('data-tema',b.dataset.t);store(TKEY,b.dataset.t);renderTemas(b.dataset.t);
+  });
+
+  /* ---------- telas ---------- */
+  function openSheet(id){$('scrim').classList.add('show');$(id).classList.add('open')}
+  function closeAll(){$('scrim').classList.remove('show');$('sa').classList.remove('open');$('sc').classList.remove('open')}
+  $('scrim').addEventListener('click',closeAll);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAll()});
+  $('cfg').addEventListener('click',function(){openSheet('sc')});
+
+  /* ---------- dias do mês ---------- */
+  function renderDays(){
+    var h='';
+    for(var i=1;i<=31;i++)h+='<button type="button" class="day" data-d="'+i+'" aria-pressed="'+(sel.indexOf(i)>-1)+'" aria-label="Dia '+i+'">'+i+'</button>';
+    $('days').innerHTML=h;
+  }
+  $('days').addEventListener('click',function(e){
+    var b=e.target.closest('.day');if(!b)return;
+    var d=+b.dataset.d,i=sel.indexOf(d);
+    if(i>-1)sel.splice(i,1);else sel.push(d);
+    renderDays();
+  });
+  document.querySelector('.presets').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    var p=b.dataset.p;sel=[];
+    for(var i=1;i<=31;i++){if(p==='all'||(p==='odd'&&i%2===1)||(p==='even'&&i%2===0))sel.push(i)}
+    renderDays();
+  });
+
+  /* ---------- criar / editar ---------- */
+  function openAlarm(id){
+    var a=id?alarms.filter(function(x){return x.id===id})[0]:null;
+    editingId=a?a.id:null;
+    $('t').value=a?a.time:'07:00';$('lbl').value=a?(a.label||''):'';sel=a?a.days.slice():[];
+    $('hA').textContent=a?'Editar alarme':'Novo alarme';
+    $('del').style.display=a?'':'none';
+    renderDays();openSheet('sa');
+  }
+  $('fab').addEventListener('click',function(){unlock();openAlarm(null)});
+  $('save').addEventListener('click',function(){
+    unlock();
+    var t=$('t').value;if(!t){$('t').focus();return}
+    var ex=editingId?alarms.filter(function(x){return x.id===editingId})[0]:null;
+    if(ex){ex.time=t;ex.label=$('lbl').value.trim();ex.days=sel.slice();ex.on=true;ex.last='';arm(ex)}
+    else{var na={id:String(Date.now())+Math.random().toString(36).slice(2,6),time:t,label:$('lbl').value.trim(),days:sel.slice(),on:true,last:'',at:0};arm(na);alarms.push(na)}
+    pedirPerm();save();render();closeAll();
+  });
+  $('del').addEventListener('click',function(){
+    alarms=alarms.filter(function(x){return x.id!==editingId});
+    save();render();closeAll();
+  });
+
+  /* ---------- lista ---------- */
+  function resumo(a){
+    var d=a.days.slice().sort(function(x,y){return x-y});
+    if(!d.length)return 'Só uma vez';
+    if(d.length===31)return 'Todos os dias do mês';
+    return (d.length===1?'Dia ':'Dias ')+d.join(', ');
+  }
+  function render(){
+    var ul=$('list');
+    if(!alarms.length){ul.innerHTML='<li class="empty">Nenhum alarme por aqui.<br>Toque no + para criar o primeiro.</li>';updateNext();return}
+    var sorted=alarms.slice().sort(function(a,b){return a.time<b.time?-1:a.time>b.time?1:0});
+    ul.innerHTML=sorted.map(function(a){
+      return '<li class="alarm'+(a.on?'':' off')+'" data-id="'+a.id+'">'+
+        '<button type="button" class="body" aria-label="Editar alarme das '+a.time+'"><span class="time">'+a.time+'</span>'+
+        (a.label?'<span class="nome">'+esc(a.label)+'</span>':'')+
+        '<span class="dias">'+resumo(a)+'</span></button>'+
+        '<button type="button" class="switch" role="switch" aria-checked="'+a.on+'" aria-label="Ligar ou desligar o alarme das '+a.time+'"></button></li>';
+    }).join('');
+    updateNext();
+  }
+  $('list').addEventListener('click',function(e){
+    var li=e.target.closest('.alarm');if(!li)return;
+    if(e.target.closest('.switch')){
+      var a=alarms.filter(function(x){return x.id===li.dataset.id})[0];
+      if(a){a.on=!a.on;a.last='';if(a.on)arm(a);save();render()}
+      return;
+    }
+    openAlarm(li.dataset.id);
+  });
+
+  /* ---------- próximo alarme ---------- */
+  function nextOccurrence(a,now){
+    var h=+a.time.slice(0,2),m=+a.time.slice(3,5);
+    for(var i=0;i<370;i++){
+      var c=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i,h,m,0,0);
+      if(c>now&&(!a.days.length||a.days.indexOf(c.getDate())>-1))return c;
+    }
+    return null;
+  }
+  function updateNext(){
+    var now=new Date(),best=null;
+    alarms.forEach(function(a){if(!a.on)return;var c=nextOccurrence(a,now);if(c&&(!best||c<best))best=c});
+    var el=$('next');
+    if(!best){el.textContent='Nenhum alarme ligado';return}
+    var mins=Math.ceil((best-now)/60000),d=Math.floor(mins/1440),h=Math.floor(mins%1440/60),mm=mins%60;
+    var txt=(d?d+' d ':'')+(h?h+' h ':'')+(mm||(!d&&!h)?mm+' min':'');
+    el.textContent='Próximo alarme em '+txt.trim()+' (dia '+best.getDate()+', '+pad(best.getHours())+':'+pad(best.getMinutes())+')';
+  }
+
+  /* ---------- som ---------- */
+  function unlock(){
+    try{
+      if(!ctx){var C=window.AudioContext||window.webkitAudioContext;if(C)ctx=new C()}
+      if(ctx&&ctx.state==='suspended')ctx.resume();
+    }catch(e){}
+  }
+  function beep(){
+    if(ctx){
+      try{
+        [0,.22].forEach(function(off){
+          var o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+off;
+          o.type='square';o.frequency.value=880;
+          g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.25,t+.01);g.gain.linearRampToValueAtTime(0,t+.16);
+          o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+.18);
+        });
+      }catch(e){}
+    }
+    try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
+  }
+  document.addEventListener('pointerdown',unlock);
+  $('test').addEventListener('click',function(){unlock();beep()});
+
+  /* ---------- tela ligada ---------- */
+  function wake(on){
+    if(on){
+      if(!navigator.wakeLock)return Promise.reject();
+      return navigator.wakeLock.request('screen').then(function(l){lock=l});
+    }
+    if(lock){lock.release();lock=null}
+    return Promise.resolve();
+  }
+  function setWl(v){$('wl').setAttribute('aria-checked',v?'true':'false')}
+  $('wl').addEventListener('click',function(){
+    var want=$('wl').getAttribute('aria-checked')!=='true';
+    wake(want).then(function(){setWl(want);store(WKEY,want?'1':'');$('wlMsg').textContent='Ajuda o alarme a tocar com a página aberta.'})
+      .catch(function(){$('wlMsg').textContent='Seu navegador não permitiu manter a tela ligada.'});
+  });
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible'&&$('wl').getAttribute('aria-checked')==='true')wake(true).catch(function(){});
+  });
+  if(read(WKEY))wake(true).then(function(){setWl(true)}).catch(function(){});
+
+  /* ---------- tocar / parar ---------- */
+  function ring(time,label){
+    ringing=true;
+    $('ringTime').textContent=time;
+    $('ringLbl').textContent=label||'Hora de acordar';
+    $('ring').classList.add('show');
+    beep();beepTimer=setInterval(beep,1200);
+    document.title='⏰ '+time;
+  }
+  function stopRing(){
+    ringing=false;clearInterval(beepTimer);beepTimer=null;
+    $('ring').classList.remove('show');
+    document.title='Despertador';limpaEntregues();
+    try{if(navigator.vibrate)navigator.vibrate(0)}catch(e){}
+  }
+  $('stop').addEventListener('click',function(){stopRing();snoozeAt=0;cancelaSoneca()});
+  $('snooze').addEventListener('click',function(){
+    snoozeLbl=$('ringLbl').textContent;stopRing();snoozeAt=Date.now()+5*60000;agendaSoneca();
+  });
+
+  /* ---------- alarmes nativos (Android) ---------- */
+  function arm(a){
+    var c=a.days.length?null:nextOccurrence(a,new Date());
+    a.at=c?+c:0;
+  }
+  function limpaEntregues(){if(native)LN.removeAllDeliveredNotifications().catch(function(){})}
+  function pedirPerm(){
+    if(!native)return;
+    LN.checkPermissions().then(function(r){return r.display==='granted'?r:LN.requestPermissions()}).then(avisos).catch(function(){});
+  }
+  function avisos(){
+    if(!native)return;
+    $('natRow').style.display='flex';
+    LN.checkPermissions().then(function(r){$('ntRow').style.display=r.display==='granted'?'none':'flex'}).catch(function(){});
+    if(LN.checkExactNotificationSetting)LN.checkExactNotificationSetting().then(function(r){$('exRow').style.display=r.exact_alarm==='granted'?'none':'flex'}).catch(function(){});
+  }
+  function agendar(){if(native)fila=fila.then(agendarAgora).catch(function(){})}
+  function agendarAgora(){
+    var now=new Date(),itens=[],mudou=false;
+    alarms.forEach(function(a){
+      if(!a.on)return;
+      if(!a.days.length){
+        if(!a.at){arm(a);mudou=true}
+        if(a.at&&a.at<=Date.now()){a.on=false;mudou=true;return}
+        if(a.at)itens.push({a:a,ts:a.at});
+        return;
+      }
+      var h=+a.time.slice(0,2),m=+a.time.slice(3,5),n=0;
+      for(var i=0;i<400&&n<MAXN;i++){
+        var c=new Date(now.getFullYear(),now.getMonth(),now.getDate()+i,h,m,0,0);
+        if(c>now&&a.days.indexOf(c.getDate())>-1){itens.push({a:a,ts:+c});n++}
+      }
+    });
+    if(mudou){store(KEY,JSON.stringify(alarms));render()}
+    itens.sort(function(x,y){return x.ts-y.ts});
+    itens=itens.slice(0,MAXN);
+    return LN.getPending().then(function(p){
+      var velhos=p.notifications.filter(function(x){return +x.id!==SN}).map(function(x){return {id:+x.id}});
+      return velhos.length?LN.cancel({notifications:velhos}):null;
+    }).then(function(){
+      if(!itens.length)return null;
+      return LN.schedule({notifications:itens.map(function(x,i){
+        return {id:i+1,title:'⏰ '+(x.a.label||'Despertador'),body:'São '+x.a.time+'. Toque para abrir.',channelId:CH,
+          schedule:{at:new Date(x.ts),allowWhileIdle:true},extra:{aid:x.a.id,time:x.a.time,label:x.a.label||'',ts:x.ts}};
+      })});
+    });
+  }
+  function agendaSoneca(){
+    if(!native)return;
+    var d=new Date(snoozeAt);
+    LN.schedule({notifications:[{id:SN,title:'⏰ '+(snoozeLbl||'Despertador'),body:'A soneca terminou. Toque para abrir.',channelId:CH,
+      schedule:{at:d,allowWhileIdle:true},extra:{time:pad(d.getHours())+':'+pad(d.getMinutes()),label:snoozeLbl,ts:snoozeAt}}]}).catch(function(){});
+  }
+  function cancelaSoneca(){if(native)LN.cancel({notifications:[{id:SN}]}).catch(function(){})}
+  function disparou(x){
+    var a=x.aid?alarms.filter(function(y){return y.id===x.aid})[0]:null;
+    if(a&&!a.days.length&&a.on){a.on=false;save();render()}
+    var n=new Date();
+    if(!ringing)ring(x.time||(pad(n.getHours())+':'+pad(n.getMinutes())),x.label);
+  }
+  if(native){
+    fila=fila.then(function(){
+      return LN.createChannel({id:CH,name:'Alarmes',description:'Alarmes do despertador',importance:5,visibility:1,sound:'alarme.wav',vibration:true,lights:true});
+    }).catch(function(){});
+    LN.addListener('localNotificationReceived',function(n){
+      disparou(n.extra||{});
+      if(ctx&&ctx.state==='running')limpaEntregues();
+    });
+    LN.addListener('localNotificationActionPerformed',function(r){
+      var x=(r.notification&&r.notification.extra)||{};
+      if(x.ts&&Date.now()-x.ts<10*60000)disparou(x);
+    });
+    $('exBtn').addEventListener('click',function(){LN.changeExactNotificationSetting().then(avisos).catch(function(){})});
+    $('ntBtn').addEventListener('click',pedirPerm);
+    document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){agendar();avisos()}});
+    agendar();avisos();
+  }
+
+  /* ---------- relógio ---------- */
+  function tick(){
+    var n=new Date(),h=pad(n.getHours()),m=pad(n.getMinutes());
+    $('clock').textContent=h+':'+m;
+    $('sec').style.width=(n.getSeconds()/60*100)+'%';
+    $('date').textContent=n.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    var hm=h+':'+m,stamp=n.toDateString()+hm;
+    if(!ringing){
+      if(snoozeAt&&Date.now()>=snoozeAt){snoozeAt=0;ring(hm,snoozeLbl);return}
+      for(var i=0;i<alarms.length;i++){
+        var a=alarms[i];
+        if(!a.on||a.time!==hm||a.last===stamp)continue;
+        if(a.days.length&&a.days.indexOf(n.getDate())<0)continue;
+        a.last=stamp;
+        if(!a.days.length)a.on=false;
+        save();render();ring(hm,a.label);break;
+      }
+    }
+    if(stamp!==lastStamp){updateNext();lastStamp=stamp}
+  }
+
+  render();tick();
+  setInterval(tick,1000);
+})();
+</script>
+</body>
+</html>
